@@ -86,11 +86,6 @@ def search_and_add_product(request, mealgroup_id):
     return render(request, 'search_products.html', context)
 
 
-# def kcal_protein_fat_carb(request):
-
-#     total_kcal = UserFood.objects.filter(user=request.user).aggregate(total_kcal=Sum('kcal'))['total_kcal']
-
-#     return render(request, 'dairy.html', {'kcal': total_kcal})
 @login_required
 def add_water(request):
     if request.method == "POST":
@@ -170,4 +165,3 @@ def target_nutritions(request):
         TargetNutrition.objects.create(user=request.user, target_kcal=target_kcal, target_protein=target_protein,
                                        target_fat=target_fat, target_carb=target_carb, target_water=target_water)
         return JsonResponse({'status': 'success'})
-

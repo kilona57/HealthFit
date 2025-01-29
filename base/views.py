@@ -180,3 +180,7 @@ def add_body_params(request):
         user.arm = arm
         user.save()
         return JsonResponse({'status': 'success'})
+
+
+def view_dairy(request):
+    return render(request, 'dairy.html')
