@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.views import PasswordChangeView
 from django.urls import reverse_lazy
 from .forms import CustomPasswordChangeForm
-from .models import UserProfile
+from .models import UserProfile, TargetNutrition
 from django.utils import dateparse
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -43,27 +43,13 @@ class RegistrationView(View):
         confirm_password = request.POST.get('message-1015')
 
         if password == confirm_password:
-            try:
-
-                validate_password(password)
-
-                user = User.objects.create_user(username, email, password)
-                login(request, user)
-                user.save()
-                print(username)
-                # messages.success(request, 'You have successfully registered!')
-                return JsonResponse({'redirect': '/userinfo/'})
-
-            except ValidationError as e:
-                error_message = ' '.join(e.messages)
-                return render(request, self.template_name, {'error_message': error_message})
-
-            except Exception as e:
-                error_message = 'Error creating account.'
-                return render(request, self.template_name, {'error_message': error_message})
-        else:
-            error_message = 'Пароль не совпадает'
-            return render(request, self.template_name, {'error_message': error_message})
+            validate_password(password)
+            user = User.objects.create_user(username, email, password)
+            user.save()
+            login(request, user)
+            print(username)
+            # messages.success(request, 'You have successfully registered!')
+            return JsonResponse({'redirect': '/userinfo/'})
 
 
 def login_user(request):
@@ -90,7 +76,10 @@ def user_logout(request):
 
 
 def main_page_for_logout_user(request):
-    return render(request, 'index copy.html')
+    if request.user.is_authenticated:
+        return render(request, 'index.html')
+    else:
+        return render(request, 'index_copy.html')
 
 
 class CustomPasswordChangeView(PasswordChangeView):
@@ -144,7 +133,7 @@ class AddBodyParams(View):
 
 
 def profile_view(request):
-    user = get_object_or_404(UserProfile, user_id=request.user.id)
+    user = get_object_or_404(UserProfile, user=request.user)
     # user_profile = UserProfile.objects.filter(user=user)
     user_activity = user.activity
     if user_activity.find('('):
@@ -157,11 +146,12 @@ def profile_view(request):
     print(user.weight)
     imt = round(user.weight / ((user.height / 100) ** 2), 2)
     print(imt)
+    targer_nutritions = TargetNutrition.objects.filter(user=request.user).order_by('id').last()
+
     return render(request, 'Профиль.html',
-                  {'chest': user.chest, 'waist': user.waist, 'hips': user.hips, 'leg_in_thigh': user.leg_in_thigh,
-                   'arm': user.arm, 'age': age, 'activity': user_activity, 'type_of_food': user.type_of_food,
-                   'weight': int(user.weight), 'name': request.user.username, 'goal': user.fitness_goal,
-                   'desired_weight': int(user.desired_weight), 'imt': imt})
+                  {'age': age, 'activity': user_activity, 'type_of_food': user.type_of_food, 'weight': int(user.weight),
+                   'name': request.user.username, 'goal': user.fitness_goal, 'desired_weight': int(user.desired_weight),
+                   'imt': imt, 'targer_nutritions': targer_nutritions})
 
 
 def add_body_params(request):

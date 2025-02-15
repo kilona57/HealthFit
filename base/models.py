@@ -15,6 +15,8 @@ class Exercise(models.Model):
     calories = models.FloatField()
     equipment = models.CharField(max_length=100)
 
+    class Meta:
+        app_label = 'base'
     def __str__(self):
         return self.name
 
